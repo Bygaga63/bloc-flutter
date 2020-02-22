@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_bloc_v1_tutorial/bloc/bloc.dart';
 import 'package:flutter_bloc_v1_tutorial/data/model/weather.dart';
 
 import 'weather_detail_page.dart';
@@ -13,8 +15,28 @@ class WeatherSearchPage extends StatelessWidget {
       body: Container(
         padding: EdgeInsets.symmetric(vertical: 16),
         alignment: Alignment.center,
-        //TODO: Display the weather and loading indicator using Bloc
-        child: buildInitialInput(),
+        child: BlocListener<WeatherBloc, WeatherState>(
+          child: BlocBuilder<WeatherBloc, WeatherState>(
+            builder: (BuildContext context, WeatherState state) {
+              if (state is WeatherInitial) {
+                return buildInitialInput();
+              } else if (state is WeatherLoading) {
+                return buildLoading();
+              } else if (state is WeatherLoaded) {
+                return buildColumnWithData(context, state.weather);
+              } else if (state is WeatherError) {
+                return buildInitialInput();
+              }
+            },
+          ),
+          listener: (BuildContext context, WeatherState state) {
+            if (state is WeatherError) {
+              Scaffold.of(context).showSnackBar(SnackBar(
+                content: Text(state.message),
+              ));
+            }
+          },
+        ),
       ),
     );
   }
@@ -52,10 +74,11 @@ class WeatherSearchPage extends StatelessWidget {
           color: Colors.lightBlue[100],
           onPressed: () {
             Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => WeatherDetailPage(
-                masterWeather: weather,
-              ),
-            ));
+                builder: (_) => BlocProvider.value(
+                    child: WeatherDetailPage(
+                      masterWeather: weather,
+                    ),
+                    value: BlocProvider.of<WeatherBloc>(context))));
           },
         ),
         CityInputField(),
@@ -82,6 +105,7 @@ class CityInputField extends StatelessWidget {
   }
 
   void submitCityName(BuildContext context, String cityName) {
-    //TODO: Fetch the weather from the repository and display it somehow
+    final watherBloc = BlocProvider.of<WeatherBloc>(context);
+    watherBloc..add(GetWeather(cityName: cityName));
   }
 }

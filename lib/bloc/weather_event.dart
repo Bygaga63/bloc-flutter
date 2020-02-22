@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+//react actions
 abstract class WeatherEvent extends Equatable {
   const WeatherEvent();
 }
@@ -20,6 +21,5 @@ class GetDetailedWeather extends WeatherEvent {
   GetDetailedWeather({this.cityName});
 
   @override
-  // TODO: implement props
   List<Object> get props => [cityName];
 }
